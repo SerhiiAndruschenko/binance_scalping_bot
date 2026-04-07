@@ -1,0 +1,6 @@
+python-binance>=1.0.19
+pandas>=2.2.2
+pandas-ta>=0.4.67b0
+python-dotenv>=1.0.1
+python-telegram-bot>=21.3
+requests>=2.31.0
