@@ -52,7 +52,7 @@ ORDER_BOOK_DEPTH: int = 10  # аналізуємо топ-10 рівнів ста
 # ── Управління ризиками ───────────────────────────────────────────────────────
 LEVERAGE: int           = 3      # менше плече ніж в основному боті
 RISK_PER_TRADE: float   = 0.01   # 1% на угоду
-TAKE_PROFIT_PCT: float  = 0.003  # +0.3%
+TAKE_PROFIT_PCT: float  = 0.005  # +0.5%
 STOP_LOSS_PCT: float    = 0.002  # -0.2%
 DAILY_LOSS_LIMIT: float = 0.03   # зупинка при -3%
 
