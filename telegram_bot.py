@@ -78,6 +78,7 @@ class TelegramCommandBot:
         )
 
         # Команди з префіксом /s_ щоб не конфліктувати з основним ботом
+        self._app.add_handler(CommandHandler("s_start",  self._cmd_start))
         self._app.add_handler(CommandHandler("s_status", self._cmd_status))
         self._app.add_handler(CommandHandler("s_today",  self._cmd_today))
         self._app.add_handler(CommandHandler("s_month",  self._cmd_month))
@@ -138,6 +139,28 @@ class TelegramCommandBot:
             )
 
     # ── Команди ───────────────────────────────────────────────────────────────
+
+    async def _cmd_start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        text = (
+            f"{config.BOT_PREFIX} 🤖 <b>Scalping Bot — команди</b>\n\n"
+            "<b>📊 Інформація</b>\n"
+            "/s_status — стан бота, баланс, відкриті позиції\n"
+            "/s_today  — статистика угод за сьогодні\n"
+            "/s_month  — статистика за поточний місяць\n\n"
+            "<b>⚙️ Управління</b>\n"
+            "/s_pause  — зупинити нові угоди (поточні залишаються)\n"
+            "/s_resume — відновити роботу після паузи\n"
+            "/s_stop   — закрити всі позиції і зупинити бота\n\n"
+            "<b>ℹ️ Поточні налаштування</b>\n"
+            f"Пари: {', '.join(config.SYMBOLS)}\n"
+            f"Таймфрейм: {config.TIMEFRAME} | Плече: x{config.LEVERAGE}\n"
+            f"Ризик/угода: {config.RISK_PER_TRADE*100:.0f}% | "
+            f"TP: +{config.TAKE_PROFIT_PCT*100:.1f}% | "
+            f"SL: -{config.STOP_LOSS_PCT*100:.1f}%\n"
+            f"Торговий баланс: {config.MAX_TRADING_BALANCE:.0f} USDT | "
+            f"Денний ліміт: -{config.DAILY_LOSS_LIMIT*100:.0f}%"
+        )
+        await self._reply(update, text)
 
     async def _cmd_status(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         balance = self.trader.binance.get_usdt_balance()
