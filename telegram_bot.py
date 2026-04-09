@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
+from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING, Optional
 
 from telegram import Update
@@ -79,6 +80,7 @@ class TelegramCommandBot:
 
         # Команди з префіксом /s_ щоб не конфліктувати з основним ботом
         self._app.add_handler(CommandHandler("s_start",  self._cmd_start))
+        self._app.add_handler(CommandHandler("s_info",   self._cmd_info))
         self._app.add_handler(CommandHandler("s_status", self._cmd_status))
         self._app.add_handler(CommandHandler("s_today",  self._cmd_today))
         self._app.add_handler(CommandHandler("s_month",  self._cmd_month))
@@ -144,7 +146,8 @@ class TelegramCommandBot:
         text = (
             f"{config.BOT_PREFIX} 🤖 <b>Scalping Bot — команди</b>\n\n"
             "<b>📊 Інформація</b>\n"
-            "/s_status — стан бота, баланс, відкриті позиції\n"
+            "/s_info   — баланс рахунку, PnL за сьогодні і місяць\n"
+            "/s_status — стан бота, відкриті позиції\n"
             "/s_today  — статистика угод за сьогодні\n"
             "/s_month  — статистика за поточний місяць\n\n"
             "<b>⚙️ Управління</b>\n"
@@ -159,6 +162,48 @@ class TelegramCommandBot:
             f"SL: -{config.STOP_LOSS_PCT*100:.1f}%\n"
             f"Торговий баланс: {config.MAX_TRADING_BALANCE:.0f} USDT | "
             f"Денний ліміт: -{config.DAILY_LOSS_LIMIT*100:.0f}%"
+        )
+        await self._reply(update, text)
+
+    async def _cmd_info(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Баланс рахунку + реалізований PnL за сьогодні і за поточний місяць."""
+        available  = self.trader.binance.get_usdt_balance()
+        wallet     = self.trader.binance.get_total_wallet_balance()
+        unrealized = self.trader.binance.get_unrealized_pnl()
+
+        # Часові межі для запиту до Binance
+        now = datetime.now(tz=timezone.utc)
+
+        # Сьогодні: з початку дня UTC
+        today_start = datetime(now.year, now.month, now.day, tzinfo=timezone.utc)
+        today_ms    = int(today_start.timestamp() * 1000)
+        now_ms      = int(now.timestamp() * 1000)
+
+        # Місяць: з першого числа поточного місяця UTC
+        month_start = datetime(now.year, now.month, 1, tzinfo=timezone.utc)
+        month_ms    = int(month_start.timestamp() * 1000)
+
+        today_pnl = self.trader.binance.get_income_history(today_ms, now_ms)
+        month_pnl = self.trader.binance.get_income_history(month_ms, now_ms)
+
+        def fmt(val: float) -> str:
+            sign = "+" if val >= 0 else ""
+            icon = "📈" if val >= 0 else "📉"
+            return f"{icon} {sign}{val:.4f} USDT"
+
+        mode = "🧪 TESTNET" if config.TESTNET else "🔴 LIVE"
+
+        text = (
+            f"{config.BOT_PREFIX} 💼 <b>Стан рахунку</b>\n"
+            f"🌐 {mode}\n\n"
+            f"<b>💰 Баланс</b>\n"
+            f"Доступно:     <b>{available:,.2f} USDT</b>\n"
+            f"Гаманець:     {wallet:,.2f} USDT\n"
+            f"Нереаліз. PnL: {unrealized:+.4f} USDT\n\n"
+            f"<b>📊 Реалізований PnL</b>\n"
+            f"Сьогодні:  {fmt(today_pnl)}\n"
+            f"Місяць:    {fmt(month_pnl)}\n\n"
+            f"<i>Дані станом на {now.strftime('%d.%m.%Y %H:%M')} UTC</i>"
         )
         await self._reply(update, text)
 

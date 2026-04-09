@@ -61,6 +61,34 @@ class BinanceClient:
             logger.error("Помилка отримання walletBalance: %s", exc)
         return 0.0
 
+    def get_unrealized_pnl(self) -> float:
+        """Повертає суму нереалізованого PnL по всіх відкритих позиціях."""
+        try:
+            account = self.client.futures_account()
+            return float(account.get("totalUnrealizedProfit", 0))
+        except BinanceAPIException as exc:
+            logger.error("Помилка отримання unrealizedPnL: %s", exc)
+        return 0.0
+
+    def get_income_history(self, start_ms: int, end_ms: int) -> float:
+        """
+        Повертає реалізований PnL (REALIZED_PNL) за вказаний період.
+        start_ms / end_ms — Unix timestamp в мілісекундах.
+        """
+        total = 0.0
+        try:
+            result = self.client.futures_income_history(
+                incomeType="REALIZED_PNL",
+                startTime=start_ms,
+                endTime=end_ms,
+                limit=1000,
+            )
+            for entry in result:
+                total += float(entry.get("income", 0))
+        except BinanceAPIException as exc:
+            logger.error("Помилка отримання income history: %s", exc)
+        return total
+
     # ── Ринкові дані ──────────────────────────────────────────────────────────
 
     def get_klines(self, symbol: str, interval: str, limit: int) -> pd.DataFrame:
