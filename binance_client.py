@@ -225,6 +225,9 @@ class BinanceClient:
             )
             return order
         except BinanceAPIException as exc:
+            # -2022 пробрасуємо вгору — trader.py обробляє цей кейс окремо
+            if exc.code == -2022:
+                raise
             logger.error("[%s] Помилка розміщення ордеру: %s", symbol, exc)
             return None
 

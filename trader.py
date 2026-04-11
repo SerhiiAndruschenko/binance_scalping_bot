@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
+from binance.exceptions import BinanceAPIException
+
 import config
 from binance_client import BinanceClient
 from logger import logger
@@ -145,12 +147,26 @@ class Trader:
 
         # Ринковий ордер на закриття
         close_side = "SELL" if side == "LONG" else "BUY"
-        order = self.binance.place_market_order(
-            symbol=symbol,
-            side=close_side,
-            quantity=record["quantity"],
-            reduce_only=True,
-        )
+        try:
+            order = self.binance.place_market_order(
+                symbol=symbol,
+                side=close_side,
+                quantity=record["quantity"],
+                reduce_only=True,
+            )
+        except BinanceAPIException as exc:
+            if exc.code == -2022:
+                # Позиція вже закрита на біржі (наприклад спрацював біржовий SL/TP)
+                # Прибираємо із стану і виходимо без сповіщення
+                logger.warning(
+                    "[%s] ReduceOnly відхилено — позиція вже закрита на біржі. "
+                    "Видаляємо зі стану.",
+                    symbol,
+                )
+                self.risk.remove_trade(symbol)
+                return False
+            raise
+
         if order is None:
             return False
 
