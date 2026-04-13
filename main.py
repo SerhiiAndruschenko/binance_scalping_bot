@@ -74,23 +74,37 @@ def _scan_symbol(
 
     result = strategy.analyze(symbol)
 
+    # Якщо тренд NEUTRAL — strategy вже залогувала, пропускаємо verbose
+    if result.price == 0.0:
+        return
+
     # ── Verbose лог ──────────────────────────────────────────────────────────
-    ema_arrow = "⬆️ UP" if result.ema_trend == "UP" else (
-        "⬇️ DOWN" if result.ema_trend == "DOWN" else "➡️ FLAT"
+    ema_arrow = (
+        "⬆️ UP"   if result.ema_trend == "UP"   else
+        "⬇️ DOWN" if result.ema_trend == "DOWN" else
+        "➡️ FLAT"
     )
-    imb_side = "BID" if result.imbalance >= 0.5 else "ASK"
+    trend_icon = (
+        "🟢 UP"   if result.trend_1h == "UP"   else
+        "🔴 DOWN" if result.trend_1h == "DOWN" else
+        "⚪ NEUTRAL"
+    )
+    imb_side     = "BID" if result.imbalance >= 0.5 else "ASK"
     signal_label = f"→ {result.signal} ✅" if result.signal != "NONE" else "→ NONE ⏳"
 
     logger.info(
-        "[%s] Ціна=%.2f | VWAP=%.2f | EMA9/21 %s | RSI=%.1f | "
-        "Imbalance=%.0f%% %s | %s",
+        "📊 [%s] Ціна=%.2f | VWAP=%.2f | Trend1h=%s | "
+        "EMA9/21 %s | RSI=%.1f | Imbalance=%.0f%% %s | "
+        "ATR ratio=%.2f | %s",
         symbol,
         result.price,
         result.vwap,
+        trend_icon,
         ema_arrow,
         result.rsi,
         result.imbalance * 100,
         imb_side,
+        result.atr_ratio,
         signal_label,
     )
 

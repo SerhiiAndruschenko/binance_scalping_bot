@@ -20,11 +20,17 @@ SYMBOLS: list[str] = [
     "SOLUSDT",
 ]
 
-# ── Таймфрейм і свічки ────────────────────────────────────────────────────────
-TIMEFRAME: str     = "1m"   # 1-хвилинні свічки
-CANDLES_LIMIT: int = 200    # більше даних для VWAP
+# ── Таймфрейм і свічки (мікрорівень) ─────────────────────────────────────────
+TIMEFRAME: str     = "1m"   # 1-хвилинні свічки для входу
+CANDLES_LIMIT: int = 200    # більше даних для VWAP і ATR
 
-# ── EMA (швидші для скальпінгу) ───────────────────────────────────────────────
+# ── Таймфрейм для визначення тренду вищого порядку ───────────────────────────
+TREND_TIMEFRAME: str  = "1h"  # старший таймфрейм для макротренду
+TREND_CANDLES: int    = 60    # кількість свічок для розрахунку тренд-EMA
+TREND_EMA_FAST: int   = 21    # швидка EMA на 1h
+TREND_EMA_SLOW: int   = 50    # повільна EMA на 1h
+
+# ── EMA (мікрорівень, 1m) ─────────────────────────────────────────────────────
 EMA_FAST: int = 9
 EMA_SLOW: int = 21
 
@@ -39,15 +45,20 @@ RSI_SHORT_MAX: float = 65.0
 VWAP_PERIOD: int = 20  # кількість свічок для розрахунку VWAP
 
 # ── MACD ──────────────────────────────────────────────────────────────────────
-MACD_FAST: int      = 6
-MACD_SLOW: int      = 13
-MACD_SIGNAL: int    = 5
-MACD_MIN_DIFF: float = 0.0003  # менше ніж в основному боті
+MACD_FAST: int       = 6
+MACD_SLOW: int       = 13
+MACD_SIGNAL: int     = 5
+MACD_MIN_DIFF: float = 0.0003  # мінімальне розходження MACD/сигнал
 
 # ── Order Book Imbalance ──────────────────────────────────────────────────────
-# 0.60 = bid_volume має бути мінімум 60% від сумарного об'єму
-ORDER_BOOK_IMBALANCE: float = 0.60
-ORDER_BOOK_DEPTH: int = 10  # аналізуємо топ-10 рівнів стакану
+# 0.70 = bid_volume має бути мінімум 70% від сумарного — жорсткіший фільтр
+ORDER_BOOK_IMBALANCE: float = 0.70
+ORDER_BOOK_DEPTH: int       = 10   # аналізуємо топ-10 рівнів стакану
+
+# ── ATR фільтр флету ──────────────────────────────────────────────────────────
+ATR_PERIOD: int          = 14   # період ATR
+ATR_AVG_PERIOD: int      = 20   # скільки ATR-свічок усереднювати
+ATR_MIN_MULTIPLIER: float = 0.8  # поточний ATR >= 0.8 від середнього → не флет
 
 # ── Управління ризиками ───────────────────────────────────────────────────────
 LEVERAGE: int           = 3      # менше плече ніж в основному боті
@@ -56,8 +67,8 @@ TAKE_PROFIT_PCT: float  = 0.005  # +0.5%
 STOP_LOSS_PCT: float    = 0.002  # -0.2%
 DAILY_LOSS_LIMIT: float = 0.03   # зупинка при -3%
 
-MAX_TRADING_BALANCE: float   = float(os.getenv("MAX_TRADING_BALANCE", "300"))
-MAX_OPEN_TRADES_GLOBAL: int  = int(os.getenv("MAX_OPEN_TRADES_GLOBAL", "2"))
+MAX_TRADING_BALANCE: float  = float(os.getenv("MAX_TRADING_BALANCE", "300"))
+MAX_OPEN_TRADES_GLOBAL: int = 1   # одна позиція одночасно — якість > кількість
 
 # Комісія Taker на Binance Futures
 TAKER_FEE: float = 0.0005  # 0.05%
