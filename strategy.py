@@ -381,3 +381,5 @@ class ScalpStrategy:
             atr_current=atr_current,
             reason=reason,
         )
+
+

@@ -139,3 +139,5 @@ def _get_atr_metrics(
     except Exception as exc:
         logger.error("[%s] Помилка _get_atr_metrics: %s", symbol, exc)
         return 0.0, 0.0, 1.0
+
+
